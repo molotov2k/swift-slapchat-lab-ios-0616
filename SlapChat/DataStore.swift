@@ -14,6 +14,8 @@ class DataStore {
 
     static let sharedDataStore = DataStore()
     
+    var messages = [Message]()
+    
     
     // MARK: - Core Data Saving support
     
@@ -31,10 +33,40 @@ class DataStore {
         }
     }
     
-//        func fetchData ()
-//        {
-//         perform a fetch request to fill an array property on your datastore
-//        }
+    
+    func fetchData () {
+        let fetchRequest = NSFetchRequest(entityName: "Message")
+        
+        do {
+            let results = try self.managedObjectContext.executeFetchRequest(fetchRequest)
+            messages = results as! [Message]
+        } catch let error as NSError {
+            print("Core Data loading error: \(error.localizedDescription)")
+        }
+        
+        if messages.isEmpty {
+            generateTestData()
+            fetchData()
+        }
+        
+    }
+    
+    
+    func generateTestData() {
+        let something = NSEntityDescription.insertNewObjectForEntityForName("Message", inManagedObjectContext: self.managedObjectContext) as! Message
+        something.content = "the something"
+        something.createdAt = NSDate()
+        
+        let moreSomething = NSEntityDescription.insertNewObjectForEntityForName("Message", inManagedObjectContext: self.managedObjectContext) as! Message
+        moreSomething.content = "the more something"
+        moreSomething.createdAt = NSDate()
+        
+        let evenMoreSomething = NSEntityDescription.insertNewObjectForEntityForName("Message", inManagedObjectContext: self.managedObjectContext) as! Message
+        evenMoreSomething.content = "unbelievable something"
+        evenMoreSomething.createdAt = NSDate()
+        
+        self.saveContext()
+    }
 
     // MARK: - Core Data stack
     // Managed Object Context property getter. This is where we've dropped our "boilerplate" code.
@@ -50,7 +82,7 @@ class DataStore {
     
     lazy var managedObjectModel: NSManagedObjectModel = {
         // The managed object model for the application. This property is not optional. It is a fatal error for the application not to be able to find and load its model.
-        let modelURL = NSBundle.mainBundle().URLForResource("<#XCDATAMODELD_NAME#>", withExtension: "momd")!
+        let modelURL = NSBundle.mainBundle().URLForResource("SlapChat", withExtension: "momd")!
         return NSManagedObjectModel(contentsOfURL: modelURL)!
     }()
     
@@ -58,7 +90,7 @@ class DataStore {
         // The persistent store coordinator for the application. This implementation creates and returns a coordinator, having added the store for the application to it. This property is optional since there are legitimate error conditions that could cause the creation of the store to fail.
         // Create the coordinator and store
         let coordinator = NSPersistentStoreCoordinator(managedObjectModel: self.managedObjectModel)
-        let url = self.applicationDocumentsDirectory.URLByAppendingPathComponent("SingleViewCoreData.sqlite")
+        let url = self.applicationDocumentsDirectory.URLByAppendingPathComponent("SlapChat.sqlite")
         var failureReason = "There was an error creating or loading the application's saved data."
         do {
             try coordinator.addPersistentStoreWithType(NSSQLiteStoreType, configuration: nil, URL: url, options: nil)
